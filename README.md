@@ -25,6 +25,8 @@ Note that in order for the service to work at all, you need a running Live Wager
 1. Build using `mvn package`
 2. Run using `java -jar target/<artifact-id>.jar server src/main/config/dev.yml`
 
+The `<artifact-id>` will generally be something like `wager-service-1.0-SNAPSHOT.jar`.
+
 See http://dropwizard.codahale.com/getting-started/ for more information about running services created with DropWizard.
 
 ## From the IDE
