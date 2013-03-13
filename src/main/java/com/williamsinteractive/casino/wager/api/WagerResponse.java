@@ -1,7 +1,6 @@
 package com.williamsinteractive.casino.wager.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
 import com.google.common.base.Objects;
 
 /**

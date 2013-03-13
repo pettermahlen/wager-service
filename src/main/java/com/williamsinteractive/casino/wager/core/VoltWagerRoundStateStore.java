@@ -46,7 +46,12 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         final SettableFuture<Boolean> resultFuture = SettableFuture.create();
 
         try {
-            client.callProcedure(new WageRoundTransitionCallback(resultFuture), "RecordTransition", wagerRoundId.getId(), transactionId.getId(), state.name(), amount);
+            client.callProcedure(new WageRoundTransitionCallback(resultFuture),
+                                 "RecordTransition",
+                                 wagerRoundId.getId(),
+                                 transactionId.getId(),
+                                 state.name(),
+                                 amount);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -79,8 +84,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
             if (isFailure(clientResponse)) {
                 LOGGER.error("Procedure call failed {}", clientResponse.getStatusString());
                 resultFuture.set(false);
-            }
-            else {
+            } else {
                 resultFuture.set(true);
             }
         }

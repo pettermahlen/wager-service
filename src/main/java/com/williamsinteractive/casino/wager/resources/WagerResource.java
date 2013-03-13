@@ -1,9 +1,9 @@
 package com.williamsinteractive.casino.wager.resources;
 
-import com.williamsinteractive.casino.wager.api.WagerRequest;
-import com.williamsinteractive.casino.wager.api.WagerResponse;
 import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
+import com.williamsinteractive.casino.wager.api.WagerRequest;
+import com.williamsinteractive.casino.wager.api.WagerResponse;
 import com.williamsinteractive.casino.wager.core.WagerRoundManager;
 import com.yammer.metrics.annotation.Timed;
 

@@ -9,13 +9,13 @@ import com.williamsinteractive.casino.wager.core.TransactionArchiver;
 import com.williamsinteractive.casino.wager.core.VoltWagerRoundStateStore;
 import com.williamsinteractive.casino.wager.core.WagerRoundManager;
 import com.williamsinteractive.casino.wager.core.WagerRoundStateStore;
+import com.williamsinteractive.casino.wager.health.VoltDbHealthCheck;
 import com.williamsinteractive.casino.wager.resources.WagerResource;
 import dagger.Module;
 import dagger.Provides;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.voltdb.client.Client;
-import org.voltdb.client.ClientConfig;
 import org.voltdb.client.ClientFactory;
 
 import java.io.IOException;
@@ -26,7 +26,8 @@ import java.io.IOException;
  * @author Petter Måhlén
  */
 @Module(
-    entryPoints = WagerResource.class
+    entryPoints = {WagerResource.class,
+                   VoltDbHealthCheck.class }
 )
 public class WagerServiceModule {
     private final Logger LOGGER = LoggerFactory.getLogger(WagerServiceModule.class);
@@ -37,14 +38,19 @@ public class WagerServiceModule {
     }
 
     @Provides
-    public WagerRoundManager wagerRoundManager(WagerRoundStateStore wagerRoundStateStore, MoneyService moneyService, TransactionArchiver archiver) {
+    public WagerRoundManager wagerRoundManager(WagerRoundStateStore wagerRoundStateStore,
+                                               MoneyService moneyService,
+                                               TransactionArchiver archiver) {
         return new SynchronousWagerRoundManager(wagerRoundStateStore, moneyService, archiver);
     }
 
     @Provides
-    public WagerRoundStateStore wagerRoundStateStore() {
-//        ClientConfig config = new ClientConfig("app", "app");
-//        Client client = ClientFactory.createClient(config);
+    public WagerRoundStateStore wagerRoundStateStore(Client client) {
+        return new VoltWagerRoundStateStore(client);
+    }
+
+    @Provides
+    public Client connectedVoltClient() {
         LOGGER.info("Creating volt client");
         Client client = ClientFactory.createClient();
         try {
@@ -54,8 +60,7 @@ public class WagerServiceModule {
         catch (IOException e) {
             throw new RuntimeException(e);
         }
-
-        return new VoltWagerRoundStateStore(client);
+        return client;
     }
 
     @Provides

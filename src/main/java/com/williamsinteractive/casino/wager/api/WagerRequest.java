@@ -19,7 +19,7 @@ public class WagerRequest {
     private final long transactionId;
     private final int amount;
 
-    public WagerRequest(@JsonProperty("wageRoundId") @Min(1) long wageRoundId,
+    public WagerRequest(@JsonProperty("wagerRoundId") @Min(1) long wageRoundId,
                         @JsonProperty("transactionId") @Min(1) long transactionId,
                         @JsonProperty("amount") int amount) {
         this.wageRoundId = wageRoundId;

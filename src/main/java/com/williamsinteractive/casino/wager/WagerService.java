@@ -1,5 +1,6 @@
 package com.williamsinteractive.casino.wager;
 
+import com.williamsinteractive.casino.wager.health.VoltDbHealthCheck;
 import com.williamsinteractive.casino.wager.resources.WagerResource;
 import com.williamsinteractive.casino.wager.wiring.WagerServiceModule;
 import com.yammer.dropwizard.Service;
@@ -21,16 +22,15 @@ public class WagerService extends Service<WagerServiceConfiguration> {
     @Override
     public void run(WagerServiceConfiguration wagerServiceConfiguration, Environment environment)
         throws Exception {
-        // TODO: instantiate object graph
-        // TODO: add resource/s
         // TODO: add health check
 
         ObjectGraph graph = ObjectGraph.create(new WagerServiceModule(wagerServiceConfiguration));
 
         environment.addResource(graph.get(WagerResource.class));
+        environment.addHealthCheck(graph.get(VoltDbHealthCheck.class));
     }
 
-    public static void main(String[] args) throws Exception{
+    public static void main(String[] args) throws Exception {
         new WagerService().run(args);
     }
 }

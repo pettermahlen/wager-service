@@ -1,9 +1,9 @@
 package com.williamsinteractive.casino.wager.core;
 
-import com.williamsinteractive.casino.wager.api.WagerRequest;
-import com.williamsinteractive.casino.wager.api.WagerResponse;
 import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
+import com.williamsinteractive.casino.wager.api.WagerRequest;
+import com.williamsinteractive.casino.wager.api.WagerResponse;
 
 /**
  * TODO: note that these guys should not just be reusing the JSON API!

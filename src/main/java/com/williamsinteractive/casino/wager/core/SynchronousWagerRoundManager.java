@@ -2,10 +2,10 @@ package com.williamsinteractive.casino.wager.core;
 
 import com.williamsinteractive.casino.wager.api.BetResult;
 import com.williamsinteractive.casino.wager.api.MoneyResponse;
-import com.williamsinteractive.casino.wager.api.WagerRequest;
-import com.williamsinteractive.casino.wager.api.WagerResponse;
 import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
+import com.williamsinteractive.casino.wager.api.WagerRequest;
+import com.williamsinteractive.casino.wager.api.WagerResponse;
 import com.williamsinteractive.casino.wager.model.Id;
 import com.williamsinteractive.casino.wager.model.Wager;
 import com.williamsinteractive.casino.wager.model.WagerRound;
@@ -40,7 +40,7 @@ public class SynchronousWagerRoundManager implements WagerRoundManager {
     }
 
     @Override
-    @Timed
+    @Timed // TODO: this doesn't work, it needs something a little more complex..
     public WagerResponse wager(WagerRequest request) {
         Id<WagerRound> wagerRoundId = Id.of(request.getWageRoundId());
         Id<Wager> wagerId = Id.of(request.getTransactionId());
