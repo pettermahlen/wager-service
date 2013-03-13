@@ -14,7 +14,7 @@ following jars locally:
 1.3 Clone the https://github.com/pettermahlen/voltdb-pom git repo and 'cd' into that directory
 1.4 run 'mvn install:install-file -Dfile=$VOLTDB_HOME/voltdb/voltdbclient-3.0.jar -DpomFile=voltdb-java-client-3.0.pom
 
-Once this is all done, you should be able to build using 'mvn package'.
+Once this is all done, you should be able to build using `mvn package`.
 
 # Running
 
@@ -22,13 +22,13 @@ Note that in order for the service to work at all, you need a running Live Wager
 
 ## From the command line
 
-1. Build using 'mvn package'
-2. Run using 'java -jar target/<artifact-id>.jar server src/main/config/dev.yml
+1. Build using `mvn package`
+2. Run using `java -jar target/<artifact-id>.jar server src/main/config/dev.yml`
 
 See http://dropwizard.codahale.com/getting-started/ for more information about running services created with DropWizard.
 
 ## From the IDE
 
-Simply launch the 'WagerService' class as a regular Java Main class, and provide the command line arguments 'server src/main/config/dev.yml'.
+Simply launch the 'WagerService' class as a regular Java Main class, and provide the command line arguments `server src/main/config/dev.yml`.
 
 
