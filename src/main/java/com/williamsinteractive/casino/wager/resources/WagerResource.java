@@ -8,6 +8,7 @@ import com.williamsinteractive.casino.wager.core.WagerRoundManager;
 import com.yammer.metrics.annotation.Timed;
 
 import javax.inject.Inject;
+import javax.validation.Valid;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.POST;
 import javax.ws.rs.Path;
@@ -33,7 +34,7 @@ public class WagerResource {
     @POST
     @Timed
     @Path("/place")
-    public WagerResponse place(WagerRequest wagerRequest) {
+    public WagerResponse place(@Valid WagerRequest wagerRequest) {
         return wagerRoundManager.wager(wagerRequest);
     }
 

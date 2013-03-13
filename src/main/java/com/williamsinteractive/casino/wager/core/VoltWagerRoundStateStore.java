@@ -33,6 +33,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
     @Override
     public void record(Id<WagerRound> wagerRoundId, Id<Wager> transactionId, WageRoundState state, long amount) {
+        LOGGER.debug("Recording: {} {} {} {}", wagerRoundId, transactionId, state, amount);
         final SettableFuture<Boolean> resultFuture = callVolt(wagerRoundId, transactionId, state, amount);
 
         verifySuccess(resultFuture);
@@ -45,7 +46,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         final SettableFuture<Boolean> resultFuture = SettableFuture.create();
 
         try {
-            client.callProcedure(new WageRoundTransitionCallback(resultFuture), "RecordTransaction", wagerRoundId.getId(), transactionId.getId(), state.name(), amount);
+            client.callProcedure(new WageRoundTransitionCallback(resultFuture), "RecordTransition", wagerRoundId.getId(), transactionId.getId(), state.name(), amount);
         }
         catch (IOException e) {
             throw new RuntimeException(e);

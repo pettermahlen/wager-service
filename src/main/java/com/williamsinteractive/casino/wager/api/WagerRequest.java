@@ -3,6 +3,8 @@ package com.williamsinteractive.casino.wager.api;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.google.common.base.Objects;
 
+import javax.validation.constraints.Min;
+
 
 /**
  * TODO: should live in separate API library!
@@ -17,8 +19,8 @@ public class WagerRequest {
     private final long transactionId;
     private final int amount;
 
-    public WagerRequest(@JsonProperty("wageRoundId") long wageRoundId,
-                        @JsonProperty("transactionId") long transactionId,
+    public WagerRequest(@JsonProperty("wageRoundId") @Min(1) long wageRoundId,
+                        @JsonProperty("transactionId") @Min(1) long transactionId,
                         @JsonProperty("amount") int amount) {
         this.wageRoundId = wageRoundId;
         this.transactionId = transactionId;
