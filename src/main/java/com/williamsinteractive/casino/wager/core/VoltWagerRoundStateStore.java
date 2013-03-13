@@ -2,6 +2,9 @@ package com.williamsinteractive.casino.wager.core;
 
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.williamsinteractive.casino.wager.model.Id;
+import com.williamsinteractive.casino.wager.model.Wager;
+import com.williamsinteractive.casino.wager.model.WagerRound;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.voltdb.client.Client;
@@ -29,17 +32,20 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
     }
 
     @Override
-    public void record(long wageRoundId, WageRoundState state) {
-        final SettableFuture<Boolean> resultFuture = callVolt(wageRoundId, state);
+    public void record(Id<WagerRound> wagerRoundId, Id<Wager> transactionId, WageRoundState state, long amount) {
+        final SettableFuture<Boolean> resultFuture = callVolt(wagerRoundId, transactionId, state, amount);
 
         verifySuccess(resultFuture);
     }
 
-    private SettableFuture<Boolean> callVolt(long wageRoundId, WageRoundState state) {
+    private SettableFuture<Boolean> callVolt(Id<WagerRound> wagerRoundId,
+                                             Id<Wager> transactionId,
+                                             WageRoundState state,
+                                             long amount) {
         final SettableFuture<Boolean> resultFuture = SettableFuture.create();
 
         try {
-            client.callProcedure(new WageRoundTransitionCallback(resultFuture), "RecordTransaction", wageRoundId,  state.name());
+            client.callProcedure(new WageRoundTransitionCallback(resultFuture), "RecordTransaction", wagerRoundId.getId(), transactionId.getId(), state.name(), amount);
         }
         catch (IOException e) {
             throw new RuntimeException(e);

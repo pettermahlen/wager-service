@@ -8,6 +8,7 @@ import com.williamsinteractive.casino.wager.api.MoneyResponse;
  * @author Petter Måhlén
  */
 public interface MoneyService {
-    MoneyResponse request(int amount);
-    MoneyResponse win(int amount);
+    // TODO: should use some internal 'money' type here instead of a long
+    MoneyResponse request(long amount);
+    MoneyResponse win(long amount);
 }

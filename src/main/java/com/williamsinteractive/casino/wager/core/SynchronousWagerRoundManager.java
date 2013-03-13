@@ -6,9 +6,18 @@ import com.williamsinteractive.casino.wager.api.WagerRequest;
 import com.williamsinteractive.casino.wager.api.WagerResponse;
 import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
+import com.williamsinteractive.casino.wager.model.Id;
+import com.williamsinteractive.casino.wager.model.Wager;
+import com.williamsinteractive.casino.wager.model.WagerRound;
 import com.yammer.metrics.annotation.Timed;
 
 import javax.inject.Inject;
+
+import static com.williamsinteractive.casino.wager.core.WageRoundState.ARCHIVED;
+import static com.williamsinteractive.casino.wager.core.WageRoundState.GOT_MONEY;
+import static com.williamsinteractive.casino.wager.core.WageRoundState.GOT_OUTCOME;
+import static com.williamsinteractive.casino.wager.core.WageRoundState.OUTCOME_CONFIRMED;
+import static com.williamsinteractive.casino.wager.core.WageRoundState.REQUEST_MONEY;
 
 /**
  * TODO: document!
@@ -33,9 +42,12 @@ public class SynchronousWagerRoundManager implements WagerRoundManager {
     @Override
     @Timed
     public WagerResponse wager(WagerRequest request) {
-        wagerRoundStateStore.record(request.getWageRoundId(), WageRoundState.REQUEST_MONEY);
+        Id<WagerRound> wagerRoundId = Id.of(request.getWageRoundId());
+        Id<Wager> wagerId = Id.of(request.getTransactionId());
+
+        wagerRoundStateStore.record(wagerRoundId, wagerId, REQUEST_MONEY, request.getAmount());
         MoneyResponse response = moneyService.request(request.getAmount());
-        wagerRoundStateStore.record(request.getWageRoundId(), WageRoundState.GOT_MONEY);
+        wagerRoundStateStore.record(wagerRoundId, wagerId, GOT_MONEY, request.getAmount());
 
         // TODO: at some point, the money service should be able to reject requests
         return new WagerResponse(BetResult.OK, response.getBalance());
@@ -44,12 +56,15 @@ public class SynchronousWagerRoundManager implements WagerRoundManager {
     @Override
     @Timed
     public OutcomeResponse outcome(OutcomeRequest request) {
-        wagerRoundStateStore.record(request.getWageRoundId(), WageRoundState.GOT_OUTCOME);
+        Id<WagerRound> wagerRoundId = Id.of(request.getWageRoundId());
+        Id<Wager> wagerId = Id.of(request.getTransactionId());
+
+        wagerRoundStateStore.record(wagerRoundId, wagerId, GOT_OUTCOME, request.getAmount());
         MoneyResponse response = moneyService.win(request.getAmount());
-        wagerRoundStateStore.record(request.getWageRoundId(), WageRoundState.OUTCOME_CONFIRMED);
+        wagerRoundStateStore.record(wagerRoundId, wagerId, OUTCOME_CONFIRMED, request.getAmount());
         // TODO: need to get transaction data from wagerRoundStateStore instead of faking it like this
         transactionArchiver.archive(new Transaction(request.getWageRoundId(), 0));
-        wagerRoundStateStore.record(request.getWageRoundId(), WageRoundState.ARCHIVED);
+        wagerRoundStateStore.record(wagerRoundId, wagerId, ARCHIVED, request.getAmount());
 
         return new OutcomeResponse(response.getBalance());
     }

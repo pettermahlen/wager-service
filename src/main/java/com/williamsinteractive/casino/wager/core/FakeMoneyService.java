@@ -23,14 +23,14 @@ public class FakeMoneyService implements MoneyService {
     }
 
     @Override
-    public MoneyResponse request(int amount) {
+    public MoneyResponse request(long amount) {
         delay();
 
         return new MoneyResponse(8767);
     }
 
     @Override
-    public MoneyResponse win(int amount) {
+    public MoneyResponse win(long amount) {
         delay();
 
         return new MoneyResponse(8767);

@@ -36,7 +36,7 @@ public class WagerResourceTest {
 
         resource = new WagerResource(wagerRoundManager);
 
-        request = new WagerRequest(23487, 764);
+        request = new WagerRequest(23487, 7658776, 764);
         response = new WagerResponse(BetResult.OK, 76);
         responseFuture = SettableFuture.create();
 

@@ -6,7 +6,8 @@ import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
 
 /**
- * TODO: document!
+ * TODO: note that these guys should not just be reusing the JSON API!
+ * TODO: also, this should possibly be asynchronous for improved performance in VoltDB API
  *
  * @author Petter Måhlén
  */

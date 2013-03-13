@@ -1,6 +1,8 @@
 package com.williamsinteractive.casino.wager.api;
 
-import java.util.Objects;
+import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
+
 
 /**
  * TODO: document!
@@ -9,10 +11,12 @@ import java.util.Objects;
  */
 public class OutcomeRequest {
     private final long wageRoundId;
-    private final int amount;
+    private final long transactionId;
+    private final long amount;
 
-    public OutcomeRequest(long wageRoundId, int amount) {
+    public OutcomeRequest(@JsonProperty long wageRoundId, @JsonProperty long transactionId, @JsonProperty long amount) {
         this.wageRoundId = wageRoundId;
+        this.transactionId = transactionId;
         this.amount = amount;
     }
 
@@ -20,13 +24,17 @@ public class OutcomeRequest {
         return wageRoundId;
     }
 
-    public int getAmount() {
+    public long getAmount() {
         return amount;
+    }
+
+    public long getTransactionId() {
+        return transactionId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(wageRoundId, amount);
+        return Objects.hashCode(wageRoundId, transactionId, amount);
     }
 
     @Override
@@ -38,6 +46,9 @@ public class OutcomeRequest {
             return false;
         }
         final OutcomeRequest other = (OutcomeRequest) obj;
-        return Objects.equals(this.wageRoundId, other.wageRoundId) && Objects.equals(this.amount, other.amount);
+        return Objects.equal(this.wageRoundId, other.wageRoundId) && Objects.equal(this.transactionId,
+                                                                                   other.transactionId) && Objects.equal(
+            this.amount,
+            other.amount);
     }
 }

@@ -1,8 +1,8 @@
 package com.williamsinteractive.casino.wager.api;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.google.common.base.Objects;
 
-import java.util.Objects;
 
 /**
  * TODO: should live in separate API library!
@@ -14,10 +14,14 @@ public class WagerRequest {
     // TODO: who should generate the wage round id?
     // TODO: should probably/certainly include information about player, game and partner ids as well
     private final long wageRoundId;
+    private final long transactionId;
     private final int amount;
 
-    public WagerRequest(@JsonProperty("wageRoundId") long wageRoundId, @JsonProperty("amount") int amount) {
+    public WagerRequest(@JsonProperty("wageRoundId") long wageRoundId,
+                        @JsonProperty("transactionId") long transactionId,
+                        @JsonProperty("amount") int amount) {
         this.wageRoundId = wageRoundId;
+        this.transactionId = transactionId;
         this.amount = amount;
     }
 
@@ -29,9 +33,13 @@ public class WagerRequest {
         return amount;
     }
 
+    public long getTransactionId() {
+        return transactionId;
+    }
+
     @Override
     public int hashCode() {
-        return Objects.hash(wageRoundId, amount);
+        return Objects.hashCode(wageRoundId, transactionId, amount);
     }
 
     @Override
@@ -43,6 +51,8 @@ public class WagerRequest {
             return false;
         }
         final WagerRequest other = (WagerRequest) obj;
-        return Objects.equals(this.wageRoundId, other.wageRoundId) && Objects.equals(this.amount, other.amount);
+        return Objects.equal(this.wageRoundId, other.wageRoundId) &&
+               Objects.equal(this.transactionId, other.transactionId) &&
+               Objects.equal(this.amount, other.amount);
     }
 }

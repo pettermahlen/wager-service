@@ -30,4 +30,11 @@ public class Transaction {
         final Transaction other = (Transaction) obj;
         return Objects.equal(this.wagerRoundId, other.wagerRoundId);
     }
+
+    @Override
+    public String toString() {
+        return Objects.toStringHelper(this)
+                      .add("wagerRoundId", wagerRoundId)
+                      .toString();
+    }
 }

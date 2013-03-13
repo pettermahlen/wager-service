@@ -6,6 +6,9 @@ import com.williamsinteractive.casino.wager.api.BetResult;
 import com.williamsinteractive.casino.wager.api.MoneyResponse;
 import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
+import com.williamsinteractive.casino.wager.model.Id;
+import com.williamsinteractive.casino.wager.model.Wager;
+import com.williamsinteractive.casino.wager.model.WagerRound;
 import org.junit.Before;
 import org.junit.Test;
 import org.mockito.InOrder;
@@ -37,6 +40,9 @@ public class SynchronousWagerRoundManagerTest {
     OutcomeRequest outcomeRequest;
     MoneyResponse moneyResponse;
 
+    Id<WagerRound> wagerRoundId;
+    Id<Wager> wagerId;
+
     @Before
     public void setUp() throws Exception {
 
@@ -45,11 +51,14 @@ public class SynchronousWagerRoundManagerTest {
         archiver = mock(TransactionArchiver.class);
 
         manager = new SynchronousWagerRoundManager(stateStore, moneyService, archiver);
+
+        wagerRoundId = Id.of(76452145);
+        wagerId = Id.of(6354);
     }
 
     @Test
     public void shouldStoreStateBeforeAndAfterAskingForMoneyForBet() throws Exception {
-        wagerRequest = new WagerRequest(8726435, 7685);
+        wagerRequest = new WagerRequest(wagerRoundId.getId(), wagerId.getId(), 7685);
         moneyResponse = new MoneyResponse(78623);
 
         when(moneyService.request(7685)).thenReturn(moneyResponse);
@@ -58,15 +67,15 @@ public class SynchronousWagerRoundManagerTest {
 
         InOrder order = inOrder(stateStore, moneyService, archiver);
 
-        order.verify(stateStore).record(8726435L, REQUEST_MONEY);
+        order.verify(stateStore).record(wagerRoundId, wagerId, REQUEST_MONEY, 7685);
         order.verify(moneyService).request(7685);
-        order.verify(stateStore).record(8726435L, GOT_MONEY);
+        order.verify(stateStore).record(wagerRoundId, wagerId, GOT_MONEY, 7685);
         order.verifyNoMoreInteractions();
     }
 
     @Test
     public void shouldReturnBalanceFromResponse() throws Exception {
-        wagerRequest = new WagerRequest(76435, 43);
+        wagerRequest = new WagerRequest(wagerRoundId.getId(), wagerId.getId(), 43);
         moneyResponse = new MoneyResponse(57);
 
         when(moneyService.request(43)).thenReturn(moneyResponse);
@@ -76,7 +85,7 @@ public class SynchronousWagerRoundManagerTest {
 
     @Test
     public void shouldStoreStateBeforeAndAfterOutcome() throws Exception {
-        outcomeRequest = new OutcomeRequest(8766521, 654);
+        outcomeRequest = new OutcomeRequest(wagerRoundId.getId(), wagerId.getId(), 654);
         moneyResponse = new MoneyResponse(78623);
 
         when(moneyService.win(654)).thenReturn(moneyResponse);
@@ -85,17 +94,17 @@ public class SynchronousWagerRoundManagerTest {
 
         InOrder order = inOrder(stateStore, moneyService, archiver);
 
-        order.verify(stateStore).record(8766521, GOT_OUTCOME);
+        order.verify(stateStore).record(wagerRoundId, wagerId, GOT_OUTCOME, 654);
         order.verify(moneyService).win(654);
-        order.verify(stateStore).record(8766521, OUTCOME_CONFIRMED);
-        order.verify(archiver).archive(new Transaction(8766521, 999));
-        order.verify(stateStore).record(8766521, ARCHIVED);
+        order.verify(stateStore).record(wagerRoundId, wagerId, OUTCOME_CONFIRMED, 654);
+        order.verify(archiver).archive(new Transaction(wagerRoundId.getId(), 999));
+        order.verify(stateStore).record(wagerRoundId, wagerId, ARCHIVED, 654);
         order.verifyNoMoreInteractions();
     }
 
     @Test
     public void shouldReturnBalanceFromMoneyServiceForOutcome() throws Exception {
-        outcomeRequest = new OutcomeRequest(626521, 4654);
+        outcomeRequest = new OutcomeRequest(wagerRoundId.getId(), wagerId.getId(), 4654);
         moneyResponse = new MoneyResponse(765);
 
         when(moneyService.win(4654)).thenReturn(moneyResponse);
