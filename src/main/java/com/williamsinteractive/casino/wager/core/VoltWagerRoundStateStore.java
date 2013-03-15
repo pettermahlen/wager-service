@@ -36,6 +36,7 @@ import static java.util.concurrent.TimeUnit.MICROSECONDS;
 public class VoltWagerRoundStateStore implements WagerRoundStateStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(VoltWagerRoundStateStore.class);
     private static final Timer RECORD_WAGER_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "recordWager");
+    private static final Timer CONFIRM_WAGER_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "confirmWager");
     private static final Timer RECORD_OUTCOME_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "recordOutcome");
     private static final Timer CONFIRM_OUTCOME_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "confirmOutcome");
 
@@ -67,11 +68,11 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
     @Override
     public void confirmWager(Id<WagerRound> wagerRoundId, Id<Wager> wagerId) {
-        TimerContext context = RECORD_WAGER_TIMER.time();
+        TimerContext context = CONFIRM_WAGER_TIMER.time();
 
         try {
             LOGGER.debug("Confirming: {} {} {} {} {}", wagerRoundId, wagerId);
-            final SettableFuture<Boolean> resultFuture = callVolt("RecordWager", wagerRoundId.id(), wagerId.id(), 0, 0, 0);
+            final SettableFuture<Boolean> resultFuture = callVolt("ConfirmWager", wagerRoundId.id(), wagerId.id(), 0, 0, 0);
 
             verifySuccess(resultFuture);
         }

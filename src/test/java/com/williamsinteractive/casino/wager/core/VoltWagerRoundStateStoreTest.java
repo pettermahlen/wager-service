@@ -91,7 +91,7 @@ public class VoltWagerRoundStateStoreTest {
     }
 
     @Test
-    public void shouldCallRecordWagerForConfirmWager() throws Exception {
+    public void shouldCallConfirmWagerForConfirmWager() throws Exception {
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
         when(response.getAppStatus()).thenReturn((byte) 1); // TODO: should link with repository catalogue jar so as to not duplicate?!
 
@@ -99,7 +99,7 @@ public class VoltWagerRoundStateStoreTest {
 
         // TODO: in a way, it's nicer to verify all the args rather than using anyVararg(), but...
         // It's almost looking too deeply into the API, possibly making tests harder to maintain
-        verify(client).callProcedure(any(ProcedureCallback.class), eq("RecordWager"), anyVararg());
+        verify(client).callProcedure(any(ProcedureCallback.class), eq("ConfirmWager"), anyVararg());
     }
 
     @Test
