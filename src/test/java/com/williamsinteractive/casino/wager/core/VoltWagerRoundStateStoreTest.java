@@ -8,7 +8,9 @@ import com.williamsinteractive.casino.wager.model.Wager;
 import com.williamsinteractive.casino.wager.model.WagerRound;
 import org.joda.time.DateTime;
 import org.junit.Before;
+import org.junit.Rule;
 import org.junit.Test;
+import org.junit.rules.ExpectedException;
 import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 import org.voltdb.VoltTable;
@@ -19,9 +21,9 @@ import org.voltdb.client.ProcedureCallback;
 
 import java.util.List;
 
+import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.CoreMatchers.equalTo;
 import static org.junit.Assert.assertThat;
-import static org.junit.Assert.fail;
 import static org.mockito.Matchers.any;
 import static org.mockito.Matchers.anyString;
 import static org.mockito.Matchers.anyVararg;
@@ -51,6 +53,8 @@ public class VoltWagerRoundStateStoreTest {
     DateTime requestDate2;
     DateTime confirmDate2;
 
+    @Rule
+    public ExpectedException thrown = ExpectedException.none();
 
     @Before
     public void setUp() throws Exception {
@@ -126,9 +130,59 @@ public class VoltWagerRoundStateStoreTest {
         CompletedWagerRound expected = setupExpectedWagerRound();
         when(response.getResults()).thenReturn(setupClientResponseForWagerRoundData());
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
+        when(response.getAppStatus()).thenReturn((byte) 1);
 
         assertThat(store.confirmOutcome(wagerRoundId, 123), equalTo(expected));
     }
+
+    @Test
+    public void shouldFailRecordWagerIfAppStatusInvalid() throws Exception {
+        when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
+        when(response.getAppStatus()).thenReturn((byte) 14);
+        when(response.getAppStatusString()).thenReturn("a failure message");
+
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage(containsString("a failure message"));
+
+        store.recordWager(wagerRoundId, wagerId, 8273, gameId, exchangeRateId);
+    }
+
+    @Test
+    public void shouldFailConfirmWagerIfAppStatusInvalid() throws Exception {
+        when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
+        when(response.getAppStatus()).thenReturn((byte) 14);
+        when(response.getAppStatusString()).thenReturn("a failure message");
+
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage(containsString("a failure message"));
+
+        store.confirmWager(wagerRoundId, wagerId);
+    }
+
+    @Test
+    public void shouldFailRecordOutcomeIfAppStatusInvalid() throws Exception {
+        when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
+        when(response.getAppStatus()).thenReturn((byte) 14);
+        when(response.getAppStatusString()).thenReturn("a failure message");
+
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage(containsString("a failure message"));
+
+        store.recordOutcome(wagerRoundId,8273);
+    }
+
+    @Test
+    public void shouldFailConfirmOutcomeIfAppStatusInvalid() throws Exception {
+        when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
+        when(response.getAppStatus()).thenReturn((byte) 14);
+        when(response.getAppStatusString()).thenReturn("a failure message");
+
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage(containsString("a failure message"));
+
+        store.confirmOutcome(wagerRoundId, 8273);
+    }
+
 
     private CompletedWagerRound setupExpectedWagerRound() {
         CompletedWager wager1 = new CompletedWager(wagerId, 27866, requestDate1, confirmDate1);
@@ -137,13 +191,6 @@ public class VoltWagerRoundStateStoreTest {
 
         // TODO: add dates to wager round
         return new CompletedWagerRound(wagerRoundId, completedWagers, gameId, exchangeRateId, 65);
-    }
-
-    @Test
-    public void shouldFailIfAppStatusInvalid() throws Exception {
-
-        fail("not implemented - means to verify that the app status indicates SUCCESS");
-
     }
 
     private static class VoltCallbackAnswer implements Answer<Boolean> {

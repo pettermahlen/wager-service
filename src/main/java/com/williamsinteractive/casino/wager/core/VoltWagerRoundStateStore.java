@@ -24,7 +24,6 @@ import java.io.IOException;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
-import java.util.concurrent.TimeUnit;
 
 import static com.google.common.base.Preconditions.checkState;
 import static com.williamsinteractive.casino.wager.core.WagerRoundState.GOT_MONEY;
@@ -139,11 +138,8 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
     private void verifySuccess(Future<Boolean> resultFuture) {
         try {
-            boolean success = Uninterruptibles.getUninterruptibly(resultFuture);
-
-            if (!success) {
-                throw new RuntimeException("Call failed");
-            }
+            // ignoring the result - errors will be communicated via ExecutionExceptions
+            Uninterruptibles.getUninterruptibly(resultFuture);
         }
         catch (ExecutionException e) {
             throw new RuntimeException(e);
@@ -160,14 +156,14 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
         @Override
         public void clientCallback(ClientResponse clientResponse) throws Exception {
-            if (isFailure(clientResponse)) {
-                LOGGER.error("Procedure call failed {}", clientResponse.getStatusString());
-                resultFuture.set(false);
+            if (isError(clientResponse)) {
+                throw new RuntimeException("Procedure call failed: " + clientResponse.getStatusString());
+            } else if (isFailure(clientResponse)) {
+                throw new RuntimeException("Validation failure: " + clientResponse.getAppStatusString());
             } else {
                 resultFuture.set(true);
             }
         }
-
     }
 
     private static class ConfirmOutcomeCallback implements ProcedureCallback {
@@ -179,8 +175,10 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
         @Override
         public void clientCallback(ClientResponse clientResponse) throws Exception {
-            if (isFailure(clientResponse)) {
+            if (isError(clientResponse)) {
                 throw new Exception("Call failed: " + clientResponse.getStatusString());
+            } else if (isFailure(clientResponse)) {
+                throw new RuntimeException("Validation failure: " + clientResponse.getAppStatusString());
             }
 
             CompletedWagerRound result = extractWagerRoundData(clientResponse.getResults());
@@ -232,8 +230,11 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         }
     }
 
-    private static boolean isFailure(ClientResponse clientResponse) {
-        // TODO: needs some kind of consistency check, too - probably best using the app status and app status string
+    private static boolean isError(ClientResponse clientResponse) {
         return clientResponse.getStatus() != ClientResponse.SUCCESS;
+    }
+
+    private static boolean isFailure(ClientResponse clientResponse) {
+        return clientResponse.getAppStatus() != (byte) 1; // TODO: should get that constant from somewhere..
     }
 }
