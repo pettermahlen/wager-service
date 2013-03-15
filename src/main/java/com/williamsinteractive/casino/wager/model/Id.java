@@ -23,7 +23,7 @@ public class Id<T> {
         this.id = id;
     }
 
-    public long getId() {
+    public long id() {
         return id;
     }
 
@@ -39,7 +39,7 @@ public class Id<T> {
         }
 
         // hmmm... this could lead to confusion where Ids of two different types are equal - that is solved by having different ID spaces. Probably not a big deal anyway.
-        return id == ((Id) o).getId();
+        return id == ((Id) o).id();
     }
 
     @Override

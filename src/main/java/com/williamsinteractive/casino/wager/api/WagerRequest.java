@@ -12,19 +12,24 @@ import javax.validation.constraints.Min;
  * @author Petter Måhlén
  */
 public class WagerRequest {
-    // TODO: nice to use the Id<T> pattern from wealthfront
     // TODO: who should generate the wage round id?
     // TODO: should probably/certainly include information about player, game and partner ids as well
     private final long wageRoundId;
-    private final long transactionId;
+    private final long wagerId;
     private final int amount;
+    private final long gameId;
+    private final long exchangeRateId;
 
     public WagerRequest(@JsonProperty("wagerRoundId") @Min(1) long wageRoundId,
-                        @JsonProperty("transactionId") @Min(1) long transactionId,
-                        @JsonProperty("amount") int amount) {
+                        @JsonProperty("wagerId") @Min(1) long wagerId,
+                        @JsonProperty("amount") int amount,
+                        @JsonProperty("gameId") long gameId,
+                        @JsonProperty("exchangeRateId") long exchangeRateId) {
         this.wageRoundId = wageRoundId;
-        this.transactionId = transactionId;
+        this.wagerId = wagerId;
         this.amount = amount;
+        this.gameId = gameId;
+        this.exchangeRateId = exchangeRateId;
     }
 
     public long getWageRoundId() {
@@ -35,13 +40,21 @@ public class WagerRequest {
         return amount;
     }
 
-    public long getTransactionId() {
-        return transactionId;
+    public long getWagerId() {
+        return wagerId;
+    }
+
+    public long getGameId() {
+        return gameId;
+    }
+
+    public long getExchangeRateId() {
+        return exchangeRateId;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(wageRoundId, transactionId, amount);
+        return Objects.hashCode(wageRoundId, wagerId, amount, gameId, exchangeRateId);
     }
 
     @Override
@@ -53,8 +66,11 @@ public class WagerRequest {
             return false;
         }
         final WagerRequest other = (WagerRequest) obj;
+
         return Objects.equal(this.wageRoundId, other.wageRoundId) &&
-               Objects.equal(this.transactionId, other.transactionId) &&
-               Objects.equal(this.amount, other.amount);
+               Objects.equal(this.wagerId, other.wagerId) &&
+               Objects.equal(this.amount, other.amount) &&
+               Objects.equal(this.gameId, other.gameId) &&
+               Objects.equal(this.exchangeRateId, other.exchangeRateId);
     }
 }

@@ -1,20 +1,36 @@
 package com.williamsinteractive.casino.wager.core;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.util.concurrent.SettableFuture;
 import com.google.common.util.concurrent.Uninterruptibles;
+import com.williamsinteractive.casino.wager.model.ExchangeRate;
+import com.williamsinteractive.casino.wager.model.Game;
 import com.williamsinteractive.casino.wager.model.Id;
 import com.williamsinteractive.casino.wager.model.Wager;
 import com.williamsinteractive.casino.wager.model.WagerRound;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
+import org.joda.time.DateTime;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.voltdb.VoltTable;
 import org.voltdb.client.Client;
 import org.voltdb.client.ClientResponse;
 import org.voltdb.client.ProcedureCallback;
 
 import javax.inject.Inject;
 import java.io.IOException;
+import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
+
+import static com.google.common.base.Preconditions.checkState;
+import static com.williamsinteractive.casino.wager.core.WagerRoundState.GOT_MONEY;
+import static com.williamsinteractive.casino.wager.core.WagerRoundState.GOT_OUTCOME;
+import static com.williamsinteractive.casino.wager.core.WagerRoundState.REQUEST_MONEY;
+import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
  * TODO: document!
@@ -23,6 +39,9 @@ import java.util.concurrent.Future;
  */
 public class VoltWagerRoundStateStore implements WagerRoundStateStore {
     private static final Logger LOGGER = LoggerFactory.getLogger(VoltWagerRoundStateStore.class);
+    private static final Timer RECORD_WAGER_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "recordWager");
+    private static final Timer RECORD_OUTCOME_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "recordOutcome");
+    private static final Timer CONFIRM_OUTCOME_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "confirmOutcome");
 
     private final Client client;
 
@@ -32,26 +51,85 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
     }
 
     @Override
-    public void record(Id<WagerRound> wagerRoundId, Id<Wager> transactionId, WageRoundState state, long amount) {
-        LOGGER.debug("Recording: {} {} {} {}", wagerRoundId, transactionId, state, amount);
-        final SettableFuture<Boolean> resultFuture = callVolt(wagerRoundId, transactionId, state, amount);
+    public void recordWager(Id<WagerRound> wagerRoundId,
+                            Id<Wager> wagerId,
+                            long wagerAmount,
+                            Id<Game> gameId,
+                            Id<ExchangeRate> exchangeRateId) {
+        TimerContext context = RECORD_WAGER_TIMER.time();
 
-        verifySuccess(resultFuture);
+        try {
+            LOGGER.debug("Recording: {} {} {} {} {}", wagerRoundId, wagerId, wagerAmount, gameId, exchangeRateId);
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordWagerTransition", wagerRoundId.id(), wagerId.id(), REQUEST_MONEY.name(), wagerAmount, gameId.id(), exchangeRateId.id());
+
+            verifySuccess(resultFuture);
+        }
+        finally {
+            context.stop();
+        }
     }
 
-    private SettableFuture<Boolean> callVolt(Id<WagerRound> wagerRoundId,
-                                             Id<Wager> transactionId,
-                                             WageRoundState state,
-                                             long amount) {
+    @Override
+    public void confirmWager(Id<WagerRound> wagerRoundId, Id<Wager> wagerId) {
+        TimerContext context = RECORD_WAGER_TIMER.time();
+
+        try {
+            LOGGER.debug("Confirming: {} {} {} {} {}", wagerRoundId, wagerId);
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordWagerTransition", wagerRoundId.id(), wagerId.id(), GOT_MONEY.name(), 0, 0, 0);
+
+            verifySuccess(resultFuture);
+        }
+        finally {
+            context.stop();
+        }
+    }
+
+    @Override
+    public void recordOutcome(Id<WagerRound> wagerRoundId, long winAmount) {
+        TimerContext context = RECORD_OUTCOME_TIMER.time();
+
+        try {
+            LOGGER.debug("Recording outcome: {} {} {} {} {}", wagerRoundId, winAmount);
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordWagerTransition", wagerRoundId.id(), 0, GOT_OUTCOME.name(), 0, 0, 0);
+
+            verifySuccess(resultFuture);
+        }
+        finally {
+            context.stop();
+        }
+    }
+
+    @Override
+    public CompletedWagerRound confirmOutcome(Id<WagerRound> wagerRoundId, long winAmount) {
+        TimerContext context = CONFIRM_OUTCOME_TIMER.time();
+
+        try {
+            LOGGER.debug("Confirming outcome: {} {}", wagerRoundId, winAmount);
+
+            SettableFuture<CompletedWagerRound> responseFuture = SettableFuture.create();
+
+            client.callProcedure(new ConfirmOutcomeCallback(responseFuture), "RecordOutcome", wagerRoundId.id(), winAmount);
+
+            return Uninterruptibles.getUninterruptibly(responseFuture);
+        }
+        catch (IOException | ExecutionException e) {
+            throw new RuntimeException(e);
+        }
+        finally {
+            context.stop();
+        }
+   }
+
+    @Override
+    public void recordArchival(Id<WagerRound> wagerRoundId) {
+        throw new UnsupportedOperationException();
+    }
+
+    private SettableFuture<Boolean> callVolt(String procedureName, Object... args) {
         final SettableFuture<Boolean> resultFuture = SettableFuture.create();
 
         try {
-            client.callProcedure(new WageRoundTransitionCallback(resultFuture),
-                                 "RecordTransition",
-                                 wagerRoundId.getId(),
-                                 transactionId.getId(),
-                                 state.name(),
-                                 amount);
+            client.callProcedure(new WageRoundTransitionCallback(resultFuture), procedureName, args);
         }
         catch (IOException e) {
             throw new RuntimeException(e);
@@ -72,6 +150,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         }
     }
 
+
     private static class WageRoundTransitionCallback implements ProcedureCallback {
         private final SettableFuture<Boolean> resultFuture;
 
@@ -89,9 +168,72 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
             }
         }
 
-        private boolean isFailure(ClientResponse clientResponse) {
-            // TODO: needs some kind of consistency check, too - probably best using the app status and app status string
-            return clientResponse.getStatus() != ClientResponse.SUCCESS;
+    }
+
+    private static class ConfirmOutcomeCallback implements ProcedureCallback {
+        private final SettableFuture<CompletedWagerRound> responseFuture;
+
+        public ConfirmOutcomeCallback(SettableFuture<CompletedWagerRound> responseFuture) {
+            this.responseFuture = responseFuture;
         }
+
+        @Override
+        public void clientCallback(ClientResponse clientResponse) throws Exception {
+            if (isFailure(clientResponse)) {
+                throw new Exception("Call failed: " + clientResponse.getStatusString());
+            }
+
+            CompletedWagerRound result = extractWagerRoundData(clientResponse.getResults());
+
+            responseFuture.set(result);
+        }
+
+        private CompletedWagerRound extractWagerRoundData(VoltTable[] results) {
+            List<CompletedWager> completedWagers = extractWagers(results[0]);
+
+            VoltTable wagerRound = results[1];
+
+            wagerRound.advanceRow();
+
+            Id<WagerRound> wagerRoundId = Id.of(wagerRound.getLong("wager_round_id"));
+            Id<Game> gameId = Id.of(wagerRound.getLong("game_id"));
+            Id<ExchangeRate> exchangeRateId = Id.of(wagerRound.getLong("exchange_rate_id"));
+            long winAmount = wagerRound.getLong("outcome_amount");
+
+            return new CompletedWagerRound(wagerRoundId, completedWagers, gameId, exchangeRateId, winAmount);
+        }
+
+        private List<CompletedWager> extractWagers(VoltTable result) {
+            ImmutableList.Builder<CompletedWager> builder = ImmutableList.builder();
+
+            // we should always have valid transitions, ordered properly - the RecordOutcome stored procedure
+            // will fail otherwise. So a little bit lenient on the error checking here.
+            while (result.advanceRow()) {
+                // first row: get base data and wager request timestamp
+                Id<Wager> wagerId = Id.of(result.getLong("wager_id"));
+                long wagerAmount = result.getLong("amount");
+
+                checkState(result.getLong("state") == 1, "expected a row in REQUEST_MONEY state, got %d", result.getLong("state"));
+
+                DateTime requestDate = new DateTime(MICROSECONDS.toMillis(result.getTimestampAsLong("created")));
+
+                // second row: get wager confirmation timestamp
+                result.advanceRow();
+
+                checkState(result.getLong("wager_id") == wagerId.id(), "expected a row for wager id %s, got wager id %d", wagerId, result.getLong("wager_id"));
+                checkState(result.getLong("state") == 2, "expected a row in GOT_MONEY state, got %d", result.getLong("state"));
+
+                DateTime confirmDate = new DateTime(MICROSECONDS.toMillis(result.getTimestampAsLong("created")));
+
+                builder.add(new CompletedWager(wagerId, wagerAmount, requestDate, confirmDate));
+            }
+
+            return builder.build();
+        }
+    }
+
+    private static boolean isFailure(ClientResponse clientResponse) {
+        // TODO: needs some kind of consistency check, too - probably best using the app status and app status string
+        return clientResponse.getStatus() != ClientResponse.SUCCESS;
     }
 }

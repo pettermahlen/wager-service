@@ -15,15 +15,12 @@ import dagger.ObjectGraph;
  */
 public class WagerService extends Service<WagerServiceConfiguration> {
     @Override
-    public void initialize(Bootstrap<WagerServiceConfiguration> betServiceConfigurationBootstrap) {
-        betServiceConfigurationBootstrap.setName("wager-service");
+    public void initialize(Bootstrap<WagerServiceConfiguration> bootstrap) {
+        bootstrap.setName("wager-service");
     }
 
     @Override
-    public void run(WagerServiceConfiguration wagerServiceConfiguration, Environment environment)
-        throws Exception {
-        // TODO: add health check
-
+    public void run(WagerServiceConfiguration wagerServiceConfiguration, Environment environment) throws Exception {
         ObjectGraph graph = ObjectGraph.create(new WagerServiceModule(wagerServiceConfiguration));
 
         environment.addResource(graph.get(WagerResource.class));

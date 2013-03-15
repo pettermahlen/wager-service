@@ -11,7 +11,7 @@ import com.google.common.base.Objects;
  */
 public class OutcomeRequest {
     private final long wageRoundId;
-    private final long transactionId;
+    private final long transactionId; // TODO: needed??!
     private final long amount;
 
     public OutcomeRequest(@JsonProperty long wageRoundId, @JsonProperty long transactionId, @JsonProperty long amount) {

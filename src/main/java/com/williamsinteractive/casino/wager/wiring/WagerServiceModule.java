@@ -2,10 +2,10 @@ package com.williamsinteractive.casino.wager.wiring;
 
 import com.williamsinteractive.casino.wager.WagerServiceConfiguration;
 import com.williamsinteractive.casino.wager.core.FakeMoneyService;
-import com.williamsinteractive.casino.wager.core.FakeTransactionArchiver;
+import com.williamsinteractive.casino.wager.core.FakeWagerRoundArchiver;
 import com.williamsinteractive.casino.wager.core.MoneyService;
 import com.williamsinteractive.casino.wager.core.SynchronousWagerRoundManager;
-import com.williamsinteractive.casino.wager.core.TransactionArchiver;
+import com.williamsinteractive.casino.wager.core.WagerRoundArchiver;
 import com.williamsinteractive.casino.wager.core.VoltWagerRoundStateStore;
 import com.williamsinteractive.casino.wager.core.WagerRoundManager;
 import com.williamsinteractive.casino.wager.core.WagerRoundStateStore;
@@ -40,7 +40,7 @@ public class WagerServiceModule {
     @Provides
     public WagerRoundManager wagerRoundManager(WagerRoundStateStore wagerRoundStateStore,
                                                MoneyService moneyService,
-                                               TransactionArchiver archiver) {
+                                               WagerRoundArchiver archiver) {
         return new SynchronousWagerRoundManager(wagerRoundStateStore, moneyService, archiver);
     }
 
@@ -69,7 +69,7 @@ public class WagerServiceModule {
     }
 
     @Provides
-    public TransactionArchiver transactionArchiver() {
-        return new FakeTransactionArchiver();
+    public WagerRoundArchiver transactionArchiver() {
+        return new FakeWagerRoundArchiver();
     }
 }

@@ -1,6 +1,8 @@
 package com.williamsinteractive.casino.wager.resources;
 
 import com.google.common.util.concurrent.SettableFuture;
+import com.williamsinteractive.casino.wager.api.OutcomeRequest;
+import com.williamsinteractive.casino.wager.api.OutcomeResponse;
 import com.williamsinteractive.casino.wager.api.WagerRequest;
 import com.williamsinteractive.casino.wager.api.WagerResponse;
 import com.williamsinteractive.casino.wager.api.BetResult;
@@ -27,6 +29,9 @@ public class WagerResourceTest {
     WagerRequest request;
     WagerResponse response;
     SettableFuture<WagerResponse> responseFuture;
+    OutcomeRequest outcomeRequest;
+    OutcomeResponse outcomeResponse;
+    SettableFuture<OutcomeResponse> outcomeResponseFuture;
 
     @Before
     public void setUp()
@@ -36,15 +41,20 @@ public class WagerResourceTest {
 
         resource = new WagerResource(wagerRoundManager);
 
-        request = new WagerRequest(23487, 7658776, 764);
+        request = new WagerRequest(23487, 7658776, 764, 33434, 65523);
         response = new WagerResponse(BetResult.OK, 76);
         responseFuture = SettableFuture.create();
 
+        outcomeRequest = new OutcomeRequest(732645, 7632, 8974);
+        outcomeResponse = new OutcomeResponse(7865);
+        outcomeResponseFuture = SettableFuture.create();
+
         when(wagerRoundManager.wager(request)).thenReturn(response);
+        when(wagerRoundManager.outcome(outcomeRequest)).thenReturn(outcomeResponse);
     }
 
     @Test
-    public void shouldCallWageRoundManagerWithRequest()
+    public void shouldCallWageRoundManagerWithWagerRequest()
         throws Exception {
 
         responseFuture.set(response);
@@ -61,5 +71,25 @@ public class WagerResourceTest {
         responseFuture.set(response);
 
         assertThat(resource.place(request), equalTo(response));
+    }
+
+    @Test
+    public void shouldCallWageRoundManagerWithOutcomeRequest()
+        throws Exception {
+
+        outcomeResponseFuture.set(outcomeResponse);
+
+        resource.outcome(outcomeRequest);
+
+        verify(wagerRoundManager).outcome(outcomeRequest);
+    }
+
+    @Test
+    public void shouldReturnOutcomeResponseFromWageRoundManager()
+        throws Exception {
+
+        outcomeResponseFuture.set(outcomeResponse);
+
+        assertThat(resource.outcome(outcomeRequest), equalTo(outcomeResponse));
     }
 }

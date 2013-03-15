@@ -5,6 +5,6 @@ package com.williamsinteractive.casino.wager.core;
  *
  * @author Petter Måhlén
  */
-public interface TransactionArchiver {
-    void archive(Transaction transaction);
+public interface WagerRoundArchiver {
+    void archive(CompletedWagerRound completedWagerRound);
 }

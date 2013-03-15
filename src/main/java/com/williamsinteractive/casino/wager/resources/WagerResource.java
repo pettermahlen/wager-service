@@ -16,7 +16,9 @@ import javax.ws.rs.Produces;
 import javax.ws.rs.core.MediaType;
 
 /**
- * TODO: document!
+ * TODO: this class should actually convert the JSON API stuff into more proper internal API stuff - so rather than
+ * exposing the longs, etc., used in the over-the-wire communication, the WagerRoundManager API should take the Id&lt;T&gt;
+ * style parameters.
  *
  * @author Petter Måhlén
  */
@@ -42,6 +44,6 @@ public class WagerResource {
     @Timed
     @Path("/outcome")
     public OutcomeResponse outcome(OutcomeRequest request) {
-        return null;
+        return wagerRoundManager.outcome(request);
     }
 }

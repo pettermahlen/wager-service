@@ -5,7 +5,7 @@ package com.williamsinteractive.casino.wager.core;
  *
  * @author Petter Måhlén
  */
-public enum WageRoundState {
+public enum WagerRoundState {
     REQUEST_MONEY,
     GOT_MONEY,
     GOT_OUTCOME,

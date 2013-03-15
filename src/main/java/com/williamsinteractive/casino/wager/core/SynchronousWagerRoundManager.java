@@ -6,18 +6,16 @@ import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
 import com.williamsinteractive.casino.wager.api.WagerRequest;
 import com.williamsinteractive.casino.wager.api.WagerResponse;
+import com.williamsinteractive.casino.wager.model.ExchangeRate;
+import com.williamsinteractive.casino.wager.model.Game;
 import com.williamsinteractive.casino.wager.model.Id;
 import com.williamsinteractive.casino.wager.model.Wager;
 import com.williamsinteractive.casino.wager.model.WagerRound;
-import com.yammer.metrics.annotation.Timed;
+import com.yammer.metrics.Metrics;
+import com.yammer.metrics.core.Timer;
+import com.yammer.metrics.core.TimerContext;
 
 import javax.inject.Inject;
-
-import static com.williamsinteractive.casino.wager.core.WageRoundState.ARCHIVED;
-import static com.williamsinteractive.casino.wager.core.WageRoundState.GOT_MONEY;
-import static com.williamsinteractive.casino.wager.core.WageRoundState.GOT_OUTCOME;
-import static com.williamsinteractive.casino.wager.core.WageRoundState.OUTCOME_CONFIRMED;
-import static com.williamsinteractive.casino.wager.core.WageRoundState.REQUEST_MONEY;
 
 /**
  * TODO: document!
@@ -25,46 +23,69 @@ import static com.williamsinteractive.casino.wager.core.WageRoundState.REQUEST_M
  * @author Petter Måhlén
  */
 public class SynchronousWagerRoundManager implements WagerRoundManager {
+    private static final Timer WAGER_TIMER = Metrics.newTimer(SynchronousWagerRoundManager.class, "wager");
+    private static final Timer OUTCOME_TIMER = Metrics.newTimer(SynchronousWagerRoundManager.class, "outcome");
 
     private final WagerRoundStateStore wagerRoundStateStore;
     private final MoneyService moneyService;
-    private final TransactionArchiver transactionArchiver;
+    private final WagerRoundArchiver wagerRoundArchiver;
 
     @Inject
-    public SynchronousWagerRoundManager(WagerRoundStateStore wagerRoundStateStore,
-                                        MoneyService moneyService,
-                                        TransactionArchiver transactionArchiver) {
+    public SynchronousWagerRoundManager(WagerRoundStateStore wagerRoundStateStore, MoneyService moneyService, WagerRoundArchiver wagerRoundArchiver) {
         this.wagerRoundStateStore = wagerRoundStateStore;
         this.moneyService = moneyService;
-        this.transactionArchiver = transactionArchiver;
+        this.wagerRoundArchiver = wagerRoundArchiver;
     }
 
     @Override
-    @Timed // TODO: this doesn't work, it needs something a little more complex..
     public WagerResponse wager(WagerRequest request) {
+        // TODO: this extraction should really be done in the Jersey layer
         Id<WagerRound> wagerRoundId = Id.of(request.getWageRoundId());
-        Id<Wager> wagerId = Id.of(request.getTransactionId());
+        Id<Wager> wagerId = Id.of(request.getWagerId());
+        Id<Game> gameId = Id.of(request.getGameId());
+        Id<ExchangeRate> exchangeRateId = Id.of(request.getExchangeRateId());
 
-        wagerRoundStateStore.record(wagerRoundId, wagerId, REQUEST_MONEY, request.getAmount());
-        MoneyResponse response = moneyService.request(request.getAmount());
-        wagerRoundStateStore.record(wagerRoundId, wagerId, GOT_MONEY, request.getAmount());
+        // TODO: would be nice to have an easy way of defining Metrics Timers at this level as well. It's not too
+        // hard to do explicitly, so here's an example of that.
+        TimerContext context = WAGER_TIMER.time();
+
+        try {
+            return placeWager(wagerRoundId, wagerId, gameId, exchangeRateId, request.getAmount());
+        }
+        finally {
+            context.stop();
+        }
+    }
+
+    private WagerResponse placeWager(Id<WagerRound> wagerRoundId, Id<Wager> wagerId, Id<Game> gameId, Id<ExchangeRate> exchangeRateId, int amount) {
+        wagerRoundStateStore.recordWager(wagerRoundId, wagerId, amount, gameId, exchangeRateId);
+        MoneyResponse response = moneyService.request(amount);
+        wagerRoundStateStore.confirmWager(wagerRoundId, wagerId);
 
         // TODO: at some point, the money service should be able to reject requests
         return new WagerResponse(BetResult.OK, response.getBalance());
     }
 
     @Override
-    @Timed
     public OutcomeResponse outcome(OutcomeRequest request) {
         Id<WagerRound> wagerRoundId = Id.of(request.getWageRoundId());
-        Id<Wager> wagerId = Id.of(request.getTransactionId());
 
-        wagerRoundStateStore.record(wagerRoundId, wagerId, GOT_OUTCOME, request.getAmount());
+        TimerContext context = OUTCOME_TIMER.time();
+
+        try {
+            return handleOutcome(request, wagerRoundId);
+        }
+        finally {
+            context.stop();
+        }
+    }
+
+    private OutcomeResponse handleOutcome(OutcomeRequest request, Id<WagerRound> wagerRoundId) {
+        wagerRoundStateStore.recordOutcome(wagerRoundId, request.getAmount());
         MoneyResponse response = moneyService.win(request.getAmount());
-        wagerRoundStateStore.record(wagerRoundId, wagerId, OUTCOME_CONFIRMED, request.getAmount());
-        // TODO: need to get transaction data from wagerRoundStateStore instead of faking it like this
-        transactionArchiver.archive(new Transaction(request.getWageRoundId(), 0));
-        wagerRoundStateStore.record(wagerRoundId, wagerId, ARCHIVED, request.getAmount());
+        CompletedWagerRound completedWagerRound = wagerRoundStateStore.confirmOutcome(wagerRoundId, request.getAmount());
+        wagerRoundArchiver.archive(completedWagerRound);
+        wagerRoundStateStore.recordArchival(wagerRoundId);
 
         return new OutcomeResponse(response.getBalance());
     }

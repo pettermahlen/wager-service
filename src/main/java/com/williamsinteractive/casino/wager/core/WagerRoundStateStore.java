@@ -1,5 +1,7 @@
 package com.williamsinteractive.casino.wager.core;
 
+import com.williamsinteractive.casino.wager.model.ExchangeRate;
+import com.williamsinteractive.casino.wager.model.Game;
 import com.williamsinteractive.casino.wager.model.Id;
 import com.williamsinteractive.casino.wager.model.Wager;
 import com.williamsinteractive.casino.wager.model.WagerRound;
@@ -10,5 +12,9 @@ import com.williamsinteractive.casino.wager.model.WagerRound;
  * @author Petter Måhlén
  */
 public interface WagerRoundStateStore {
-    void record(Id<WagerRound> wagerRoundId, Id<Wager> transactionId, WageRoundState state, long amount);
+    void recordWager(Id<WagerRound> wagerRoundId, Id<Wager> wagerId, long wagerAmount, Id<Game> gameId, Id<ExchangeRate> exchangeRateId);
+    void confirmWager(Id<WagerRound> wagerRoundId, Id<Wager> wagerId);
+    void recordOutcome(Id<WagerRound> wagerRoundId, long winAmount);
+    CompletedWagerRound confirmOutcome(Id<WagerRound> wagerRoundId, long winAmount);
+    void recordArchival(Id<WagerRound> wagerRoundId);
 }
