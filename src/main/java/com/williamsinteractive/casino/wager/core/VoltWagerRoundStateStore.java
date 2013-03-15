@@ -26,9 +26,6 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
 import static com.google.common.base.Preconditions.checkState;
-import static com.williamsinteractive.casino.wager.core.WagerRoundState.GOT_MONEY;
-import static com.williamsinteractive.casino.wager.core.WagerRoundState.GOT_OUTCOME;
-import static com.williamsinteractive.casino.wager.core.WagerRoundState.REQUEST_MONEY;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
@@ -59,7 +56,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
         try {
             LOGGER.debug("Recording: {} {} {} {} {}", wagerRoundId, wagerId, wagerAmount, gameId, exchangeRateId);
-            final SettableFuture<Boolean> resultFuture = callVolt("RecordWagerTransition", wagerRoundId.id(), wagerId.id(), REQUEST_MONEY.name(), wagerAmount, gameId.id(), exchangeRateId.id());
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordWager", wagerRoundId.id(), wagerId.id(), wagerAmount, gameId.id(), exchangeRateId.id());
 
             verifySuccess(resultFuture);
         }
@@ -74,7 +71,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
         try {
             LOGGER.debug("Confirming: {} {} {} {} {}", wagerRoundId, wagerId);
-            final SettableFuture<Boolean> resultFuture = callVolt("RecordWagerTransition", wagerRoundId.id(), wagerId.id(), GOT_MONEY.name(), 0, 0, 0);
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordWager", wagerRoundId.id(), wagerId.id(), 0, 0, 0);
 
             verifySuccess(resultFuture);
         }
@@ -89,7 +86,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
         try {
             LOGGER.debug("Recording outcome: {} {} {} {} {}", wagerRoundId, winAmount);
-            final SettableFuture<Boolean> resultFuture = callVolt("RecordWagerTransition", wagerRoundId.id(), 0, GOT_OUTCOME.name(), 0, 0, 0);
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordOutcome", wagerRoundId.id(), winAmount);
 
             verifySuccess(resultFuture);
         }
@@ -107,7 +104,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
             SettableFuture<CompletedWagerRound> responseFuture = SettableFuture.create();
 
-            client.callProcedure(new ConfirmOutcomeCallback(responseFuture), "RecordOutcome", wagerRoundId.id(), winAmount);
+            client.callProcedure(new ConfirmOutcomeCallback(responseFuture), "ConfirmOutcome", wagerRoundId.id(), winAmount);
 
             return Uninterruptibles.getUninterruptibly(responseFuture);
         }
