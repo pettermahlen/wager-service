@@ -57,7 +57,12 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
         try {
             LOGGER.debug("Recording wager: {} {} {} {} {}", wagerRoundId, wagerId, wagerAmount, gameId, exchangeRateId);
-            final SettableFuture<Boolean> resultFuture = callVolt("RecordWager", wagerRoundId.id(), wagerId.id(), wagerAmount, gameId.id(), exchangeRateId.id());
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordWager",
+                                                                  wagerRoundId.id(),
+                                                                  wagerId.id(),
+                                                                  wagerAmount,
+                                                                  gameId.id(),
+                                                                  exchangeRateId.id());
 
             verifySuccess(resultFuture);
         }
@@ -115,7 +120,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         finally {
             context.stop();
         }
-   }
+    }
 
     @Override
     public void recordArchival(Id<WagerRound> wagerRoundId) {

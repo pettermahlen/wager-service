@@ -1,11 +1,11 @@
 package com.williamsinteractive.casino.wager.resources;
 
 import com.google.common.util.concurrent.SettableFuture;
+import com.williamsinteractive.casino.wager.api.BetResult;
 import com.williamsinteractive.casino.wager.api.OutcomeRequest;
 import com.williamsinteractive.casino.wager.api.OutcomeResponse;
 import com.williamsinteractive.casino.wager.api.WagerRequest;
 import com.williamsinteractive.casino.wager.api.WagerResponse;
-import com.williamsinteractive.casino.wager.api.BetResult;
 import com.williamsinteractive.casino.wager.core.WagerRoundManager;
 import org.junit.Before;
 import org.junit.Test;

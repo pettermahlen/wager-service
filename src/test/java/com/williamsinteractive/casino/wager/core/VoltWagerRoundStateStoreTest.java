@@ -210,7 +210,7 @@ public class VoltWagerRoundStateStoreTest {
 
     private CompletedWagerRound setupExpectedWagerRound() {
         CompletedWager wager1 = new CompletedWager(wagerId, 27866, requestDate1, confirmDate1);
-        CompletedWager wager2 = new CompletedWager(Id.<Wager>of(7634), 667,  requestDate2, confirmDate2);
+        CompletedWager wager2 = new CompletedWager(Id.<Wager>of(7634), 667, requestDate2, confirmDate2);
         List<CompletedWager> completedWagers = ImmutableList.of(wager1, wager2);
 
         // TODO: add dates to wager round
@@ -237,16 +237,17 @@ public class VoltWagerRoundStateStoreTest {
     private VoltTable[] setupClientResponseForWagerRoundData() {
         VoltTable wagers = new VoltTable(WAGER_COLUMNS);
         wagers.addRow(wagerRoundId.id(), wagerId.id(), 27866, requestDate1.toDate(), confirmDate1.toDate());
-        wagers.addRow(wagerRoundId.id(), 7634,         667,   requestDate2.toDate(), confirmDate2.toDate());
+        wagers.addRow(wagerRoundId.id(), 7634, 667, requestDate2.toDate(), confirmDate2.toDate());
 
         VoltTable wagerRounds = new VoltTable(WAGER_ROUND_COLUMNS);
         wagerRounds.addRow(wagerRoundId.id(), gameId.id(), exchangeRateId.id(), 65, outcomeConfirmDate.toDate(), null);
 
-        return new VoltTable[] { wagers, wagerRounds };
+        return new VoltTable[]{wagers,
+                               wagerRounds};
     }
 
 
-    private static final VoltTable.ColumnInfo[] WAGER_COLUMNS = new VoltTable.ColumnInfo[] {
+    private static final VoltTable.ColumnInfo[] WAGER_COLUMNS = new VoltTable.ColumnInfo[]{
         new VoltTable.ColumnInfo("wager_round_id", VoltType.BIGINT),
         new VoltTable.ColumnInfo("wager_id", VoltType.BIGINT),
         new VoltTable.ColumnInfo("amount", VoltType.BIGINT),
@@ -254,7 +255,7 @@ public class VoltWagerRoundStateStoreTest {
         new VoltTable.ColumnInfo("confirmed", VoltType.TIMESTAMP),
     };
 
-    private static final VoltTable.ColumnInfo[] WAGER_ROUND_COLUMNS = new VoltTable.ColumnInfo[] {
+    private static final VoltTable.ColumnInfo[] WAGER_ROUND_COLUMNS = new VoltTable.ColumnInfo[]{
         new VoltTable.ColumnInfo("wager_round_id", VoltType.BIGINT),
         new VoltTable.ColumnInfo("game_id", VoltType.BIGINT),
         new VoltTable.ColumnInfo("exchange_rate_id", VoltType.BIGINT),

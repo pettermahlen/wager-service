@@ -49,7 +49,7 @@ public class OutcomeRequest {
         }
         final OutcomeRequest other = (OutcomeRequest) obj;
         return Objects.equal(this.wagerRoundId, other.wagerRoundId) && Objects.equal(this.transactionId,
-                                                                                   other.transactionId) && Objects.equal(
+                                                                                     other.transactionId) && Objects.equal(
             this.amount,
             other.amount);
     }

@@ -5,8 +5,8 @@ import com.williamsinteractive.casino.wager.core.FakeMoneyService;
 import com.williamsinteractive.casino.wager.core.FakeWagerRoundArchiver;
 import com.williamsinteractive.casino.wager.core.MoneyService;
 import com.williamsinteractive.casino.wager.core.SynchronousWagerRoundManager;
-import com.williamsinteractive.casino.wager.core.WagerRoundArchiver;
 import com.williamsinteractive.casino.wager.core.VoltWagerRoundStateStore;
+import com.williamsinteractive.casino.wager.core.WagerRoundArchiver;
 import com.williamsinteractive.casino.wager.core.WagerRoundManager;
 import com.williamsinteractive.casino.wager.core.WagerRoundStateStore;
 import com.williamsinteractive.casino.wager.health.VoltDbHealthCheck;
@@ -28,7 +28,7 @@ import java.io.IOException;
  */
 @Module(
     entryPoints = {WagerResource.class,
-                   VoltDbHealthCheck.class }
+                   VoltDbHealthCheck.class}
 )
 public class WagerServiceModule {
     private final Logger LOGGER = LoggerFactory.getLogger(WagerServiceModule.class);

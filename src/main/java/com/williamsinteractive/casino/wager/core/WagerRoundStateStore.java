@@ -13,8 +13,12 @@ import com.williamsinteractive.casino.wager.model.WagerRound;
  */
 public interface WagerRoundStateStore {
     void recordWager(Id<WagerRound> wagerRoundId, Id<Wager> wagerId, long wagerAmount, Id<Game> gameId, Id<ExchangeRate> exchangeRateId);
+
     void confirmWager(Id<WagerRound> wagerRoundId, Id<Wager> wagerId);
+
     void recordOutcome(Id<WagerRound> wagerRoundId, long winAmount);
+
     CompletedWagerRound confirmOutcome(Id<WagerRound> wagerRoundId, long winAmount);
+
     void recordArchival(Id<WagerRound> wagerRoundId);
 }

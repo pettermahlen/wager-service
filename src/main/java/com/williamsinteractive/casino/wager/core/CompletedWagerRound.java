@@ -13,7 +13,7 @@ import java.util.List;
  * NOTE: this is a separate class from the (currently empty) WagerRound class for two reasons:
  * 1. This should represent the data for a completed (surprise!) wager round, as opposed to the general concept of a wager round.
  * 2. The general wager round concept probably belongs in a shared (between many services) model library, whereas this is specific
- *    to the wager service alone.
+ * to the wager service alone.
  *
  * @author Petter Måhlén
  */
