@@ -25,7 +25,6 @@ import java.util.List;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 
-import static com.google.common.base.Preconditions.checkState;
 import static java.util.concurrent.TimeUnit.MICROSECONDS;
 
 /**
@@ -39,6 +38,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
     private static final Timer CONFIRM_WAGER_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "confirmWager");
     private static final Timer RECORD_OUTCOME_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "recordOutcome");
     private static final Timer CONFIRM_OUTCOME_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "confirmOutcome");
+    private static final Timer RECORD_ARCHIVAL_TIMER = Metrics.newTimer(VoltWagerRoundStateStore.class, "recordArchival");
 
     private final Client client;
 
@@ -56,7 +56,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         TimerContext context = RECORD_WAGER_TIMER.time();
 
         try {
-            LOGGER.debug("Recording: {} {} {} {} {}", wagerRoundId, wagerId, wagerAmount, gameId, exchangeRateId);
+            LOGGER.debug("Recording wager: {} {} {} {} {}", wagerRoundId, wagerId, wagerAmount, gameId, exchangeRateId);
             final SettableFuture<Boolean> resultFuture = callVolt("RecordWager", wagerRoundId.id(), wagerId.id(), wagerAmount, gameId.id(), exchangeRateId.id());
 
             verifySuccess(resultFuture);
@@ -71,7 +71,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         TimerContext context = CONFIRM_WAGER_TIMER.time();
 
         try {
-            LOGGER.debug("Confirming: {} {} {} {} {}", wagerRoundId, wagerId);
+            LOGGER.debug("Confirming wager: {} {}", wagerRoundId, wagerId);
             final SettableFuture<Boolean> resultFuture = callVolt("ConfirmWager", wagerRoundId.id(), wagerId.id());
 
             verifySuccess(resultFuture);
@@ -86,7 +86,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         TimerContext context = RECORD_OUTCOME_TIMER.time();
 
         try {
-            LOGGER.debug("Recording outcome: {} {} {} {} {}", wagerRoundId, winAmount);
+            LOGGER.debug("Recording outcome: {} {}", wagerRoundId, winAmount);
             final SettableFuture<Boolean> resultFuture = callVolt("RecordOutcome", wagerRoundId.id(), winAmount);
 
             verifySuccess(resultFuture);
@@ -119,7 +119,18 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
     @Override
     public void recordArchival(Id<WagerRound> wagerRoundId) {
-        throw new UnsupportedOperationException();
+        TimerContext context = RECORD_ARCHIVAL_TIMER.time();
+
+        try {
+            LOGGER.debug("Recording archival success: {}", wagerRoundId);
+
+            final SettableFuture<Boolean> resultFuture = callVolt("RecordArchival", wagerRoundId.id());
+
+            verifySuccess(resultFuture);
+        }
+        finally {
+            context.stop();
+        }
     }
 
     private SettableFuture<Boolean> callVolt(String procedureName, Object... args) {
@@ -128,8 +139,9 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         try {
             client.callProcedure(new WageRoundTransitionCallback(resultFuture), procedureName, args);
         }
-        catch (IOException e) {
-            throw new RuntimeException(e);
+        catch (Exception e) {
+            // report all exceptions via the future instead of here (not Errors, though, they can leak through)
+            resultFuture.setException(e);
         }
         return resultFuture;
     }
@@ -202,24 +214,13 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         private List<CompletedWager> extractWagers(VoltTable result) {
             ImmutableList.Builder<CompletedWager> builder = ImmutableList.builder();
 
-            // we should always have valid transitions, ordered properly - the RecordOutcome stored procedure
-            // will fail otherwise. So a little bit lenient on the error checking here.
+            // we should always have valid wagers, confirmed and all, or the record outcome would have failed to validate.
+            // hence, no error checking here
             while (result.advanceRow()) {
-                // first row: get base data and wager request timestamp
                 Id<Wager> wagerId = Id.of(result.getLong("wager_id"));
                 long wagerAmount = result.getLong("amount");
-
-                checkState(result.getLong("state") == 1, "expected a row in REQUEST_MONEY state, got %d", result.getLong("state"));
-
                 DateTime requestDate = new DateTime(MICROSECONDS.toMillis(result.getTimestampAsLong("created")));
-
-                // second row: get wager confirmation timestamp
-                result.advanceRow();
-
-                checkState(result.getLong("wager_id") == wagerId.id(), "expected a row for wager id %s, got wager id %d", wagerId, result.getLong("wager_id"));
-                checkState(result.getLong("state") == 2, "expected a row in GOT_MONEY state, got %d", result.getLong("state"));
-
-                DateTime confirmDate = new DateTime(MICROSECONDS.toMillis(result.getTimestampAsLong("created")));
+                DateTime confirmDate = new DateTime(MICROSECONDS.toMillis(result.getTimestampAsLong("confirmed")));
 
                 builder.add(new CompletedWager(wagerId, wagerAmount, requestDate, confirmDate));
             }

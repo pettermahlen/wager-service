@@ -53,6 +53,7 @@ public class VoltWagerRoundStateStoreTest {
     DateTime confirmDate1;
     DateTime requestDate2;
     DateTime confirmDate2;
+    DateTime outcomeConfirmDate;
 
     @Rule
     public ExpectedException thrown = ExpectedException.none();
@@ -77,6 +78,7 @@ public class VoltWagerRoundStateStoreTest {
         confirmDate1 = DateTime.parse("2013-03-15T11:03:00");
         requestDate2 = DateTime.parse("2013-03-15T11:04:00");
         confirmDate2 = DateTime.parse("2013-03-15T11:04:10");
+        outcomeConfirmDate = DateTime.parse("2013-03-15T11:04:12");
     }
 
     @Test
@@ -134,6 +136,17 @@ public class VoltWagerRoundStateStoreTest {
         assertThat(store.confirmOutcome(wagerRoundId, 123), equalTo(expected));
     }
 
+
+    @Test
+    public void shouldCallRecordArchivalForRecordArchival() throws Exception {
+        when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
+        when(response.getAppStatus()).thenReturn(SUCCESS); // TODO: should link with repository catalogue jar so as to not duplicate?!
+
+        store.recordArchival(wagerRoundId);
+
+        verify(client).callProcedure(any(ProcedureCallback.class), eq("RecordArchival"), eq(wagerRoundId.id()));
+    }
+
     @Test
     public void shouldFailRecordWagerIfAppStatusInvalid() throws Exception {
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
@@ -182,6 +195,18 @@ public class VoltWagerRoundStateStoreTest {
         store.confirmOutcome(wagerRoundId, 8273);
     }
 
+    @Test
+    public void shouldFailRecordArchivalIfAppStatusInvalid() throws Exception {
+        when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
+        when(response.getAppStatus()).thenReturn((byte) 14);
+        when(response.getAppStatusString()).thenReturn("a failure message");
+
+        thrown.expect(RuntimeException.class);
+        thrown.expectMessage(containsString("a failure message"));
+
+        store.recordArchival(wagerRoundId);
+    }
+
 
     private CompletedWagerRound setupExpectedWagerRound() {
         CompletedWager wager1 = new CompletedWager(wagerId, 27866, requestDate1, confirmDate1);
@@ -211,14 +236,11 @@ public class VoltWagerRoundStateStoreTest {
 
     private VoltTable[] setupClientResponseForWagerRoundData() {
         VoltTable wagers = new VoltTable(WAGER_COLUMNS);
-        wagers.addRow(wagerRoundId.id(), wagerId.id(), 1, 27866, requestDate1.toDate());
-        wagers.addRow(wagerRoundId.id(), wagerId.id(), 2, 27866, confirmDate1.toDate());
-
-        wagers.addRow(wagerRoundId.id(), 7634, 1, 667, requestDate2.toDate());
-        wagers.addRow(wagerRoundId.id(), 7634, 2, 667, confirmDate2.toDate());
+        wagers.addRow(wagerRoundId.id(), wagerId.id(), 27866, requestDate1.toDate(), confirmDate1.toDate());
+        wagers.addRow(wagerRoundId.id(), 7634,         667,   requestDate2.toDate(), confirmDate2.toDate());
 
         VoltTable wagerRounds = new VoltTable(WAGER_ROUND_COLUMNS);
-        wagerRounds.addRow(wagerRoundId.id(), gameId.id(), exchangeRateId.id(), 65, null, null); // TODO
+        wagerRounds.addRow(wagerRoundId.id(), gameId.id(), exchangeRateId.id(), 65, outcomeConfirmDate.toDate(), null);
 
         return new VoltTable[] { wagers, wagerRounds };
     }
@@ -227,9 +249,9 @@ public class VoltWagerRoundStateStoreTest {
     private static final VoltTable.ColumnInfo[] WAGER_COLUMNS = new VoltTable.ColumnInfo[] {
         new VoltTable.ColumnInfo("wager_round_id", VoltType.BIGINT),
         new VoltTable.ColumnInfo("wager_id", VoltType.BIGINT),
-        new VoltTable.ColumnInfo("state", VoltType.TINYINT),
         new VoltTable.ColumnInfo("amount", VoltType.BIGINT),
         new VoltTable.ColumnInfo("created", VoltType.TIMESTAMP),
+        new VoltTable.ColumnInfo("confirmed", VoltType.TIMESTAMP),
     };
 
     private static final VoltTable.ColumnInfo[] WAGER_ROUND_COLUMNS = new VoltTable.ColumnInfo[] {

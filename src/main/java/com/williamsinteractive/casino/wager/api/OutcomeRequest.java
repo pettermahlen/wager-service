@@ -10,18 +10,20 @@ import com.google.common.base.Objects;
  * @author Petter Måhlén
  */
 public class OutcomeRequest {
-    private final long wageRoundId;
+    private final long wagerRoundId;
     private final long transactionId; // TODO: needed??!
     private final long amount;
 
-    public OutcomeRequest(@JsonProperty long wageRoundId, @JsonProperty long transactionId, @JsonProperty long amount) {
-        this.wageRoundId = wageRoundId;
+    public OutcomeRequest(@JsonProperty("wagerRoundId") long wagerRoundId,
+                          @JsonProperty("transactionId") long transactionId,
+                          @JsonProperty("amount") long amount) {
+        this.wagerRoundId = wagerRoundId;
         this.transactionId = transactionId;
         this.amount = amount;
     }
 
-    public long getWageRoundId() {
-        return wageRoundId;
+    public long getWagerRoundId() {
+        return wagerRoundId;
     }
 
     public long getAmount() {
@@ -34,7 +36,7 @@ public class OutcomeRequest {
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(wageRoundId, transactionId, amount);
+        return Objects.hashCode(wagerRoundId, transactionId, amount);
     }
 
     @Override
@@ -46,7 +48,7 @@ public class OutcomeRequest {
             return false;
         }
         final OutcomeRequest other = (OutcomeRequest) obj;
-        return Objects.equal(this.wageRoundId, other.wageRoundId) && Objects.equal(this.transactionId,
+        return Objects.equal(this.wagerRoundId, other.wagerRoundId) && Objects.equal(this.transactionId,
                                                                                    other.transactionId) && Objects.equal(
             this.amount,
             other.amount);

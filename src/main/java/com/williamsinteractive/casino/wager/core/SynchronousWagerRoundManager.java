@@ -68,7 +68,7 @@ public class SynchronousWagerRoundManager implements WagerRoundManager {
 
     @Override
     public OutcomeResponse outcome(OutcomeRequest request) {
-        Id<WagerRound> wagerRoundId = Id.of(request.getWageRoundId());
+        Id<WagerRound> wagerRoundId = Id.of(request.getWagerRoundId());
 
         TimerContext context = OUTCOME_TIMER.time();
 
