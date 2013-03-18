@@ -72,7 +72,7 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
 
         try {
             LOGGER.debug("Confirming: {} {} {} {} {}", wagerRoundId, wagerId);
-            final SettableFuture<Boolean> resultFuture = callVolt("ConfirmWager", wagerRoundId.id(), wagerId.id(), 0, 0, 0);
+            final SettableFuture<Boolean> resultFuture = callVolt("ConfirmWager", wagerRoundId.id(), wagerId.id());
 
             verifySuccess(resultFuture);
         }
@@ -233,6 +233,6 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
     }
 
     private static boolean isFailure(ClientResponse clientResponse) {
-        return clientResponse.getAppStatus() != (byte) 1; // TODO: should get that constant from somewhere..
+        return clientResponse.getAppStatus() != (byte) 0; // TODO: should get that constant from somewhere..
     }
 }

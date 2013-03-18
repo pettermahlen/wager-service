@@ -38,6 +38,7 @@ import static org.mockito.Mockito.when;
  * @author Petter Måhlén
  */
 public class VoltWagerRoundStateStoreTest {
+    public static final byte SUCCESS = 0;
     VoltWagerRoundStateStore store;
 
     Client client;
@@ -81,7 +82,7 @@ public class VoltWagerRoundStateStoreTest {
     @Test
     public void shouldCallRecordWagerForRecordWager() throws Exception {
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
-        when(response.getAppStatus()).thenReturn((byte) 1); // TODO: should link with repository catalogue jar so as to not duplicate?!
+        when(response.getAppStatus()).thenReturn(SUCCESS); // TODO: should link with repository catalogue jar so as to not duplicate?!
 
         store.recordWager(wagerRoundId, wagerId, 234666, gameId, exchangeRateId);
 
@@ -93,19 +94,17 @@ public class VoltWagerRoundStateStoreTest {
     @Test
     public void shouldCallConfirmWagerForConfirmWager() throws Exception {
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
-        when(response.getAppStatus()).thenReturn((byte) 1); // TODO: should link with repository catalogue jar so as to not duplicate?!
+        when(response.getAppStatus()).thenReturn(SUCCESS); // TODO: should link with repository catalogue jar so as to not duplicate?!
 
         store.confirmWager(wagerRoundId, wagerId);
 
-        // TODO: in a way, it's nicer to verify all the args rather than using anyVararg(), but...
-        // It's almost looking too deeply into the API, possibly making tests harder to maintain
-        verify(client).callProcedure(any(ProcedureCallback.class), eq("ConfirmWager"), anyVararg());
+        verify(client).callProcedure(any(ProcedureCallback.class), eq("ConfirmWager"), eq(wagerRoundId.id()), eq(wagerId.id()));
     }
 
     @Test
     public void shouldCallRecordOutcomeForRecordOutcome() throws Exception {
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
-        when(response.getAppStatus()).thenReturn((byte) 1); // TODO: should link with repository catalogue jar so as to not duplicate?!
+        when(response.getAppStatus()).thenReturn(SUCCESS); // TODO: should link with repository catalogue jar so as to not duplicate?!
 
         store.recordOutcome(wagerRoundId, 985436);
 
@@ -117,7 +116,7 @@ public class VoltWagerRoundStateStoreTest {
     @Test
     public void shouldCallConfirmOutcomeForConfirmOutcome() throws Exception {
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
-        when(response.getAppStatus()).thenReturn((byte) 1); // TODO: should link with repository catalogue jar so as to not duplicate?!
+        when(response.getAppStatus()).thenReturn(SUCCESS); // TODO: should link with repository catalogue jar so as to not duplicate?!
         when(response.getResults()).thenReturn(setupClientResponseForWagerRoundData());
 
         store.confirmOutcome(wagerRoundId, 985436L);
@@ -130,7 +129,7 @@ public class VoltWagerRoundStateStoreTest {
         CompletedWagerRound expected = setupExpectedWagerRound();
         when(response.getResults()).thenReturn(setupClientResponseForWagerRoundData());
         when(response.getStatus()).thenReturn(ClientResponse.SUCCESS);
-        when(response.getAppStatus()).thenReturn((byte) 1);
+        when(response.getAppStatus()).thenReturn(SUCCESS);
 
         assertThat(store.confirmOutcome(wagerRoundId, 123), equalTo(expected));
     }
@@ -168,7 +167,7 @@ public class VoltWagerRoundStateStoreTest {
         thrown.expect(RuntimeException.class);
         thrown.expectMessage(containsString("a failure message"));
 
-        store.recordOutcome(wagerRoundId,8273);
+        store.recordOutcome(wagerRoundId, 8273);
     }
 
     @Test
