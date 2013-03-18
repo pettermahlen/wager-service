@@ -3,3 +3,6 @@ voltPort: 21212
 
 logging:
   level: DEBUG
+
+  loggers:
+    "org.eclipse.jetty": INFO

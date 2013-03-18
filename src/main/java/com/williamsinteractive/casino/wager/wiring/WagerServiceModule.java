@@ -18,6 +18,7 @@ import org.slf4j.LoggerFactory;
 import org.voltdb.client.Client;
 import org.voltdb.client.ClientFactory;
 
+import javax.inject.Singleton;
 import java.io.IOException;
 
 /**
@@ -38,6 +39,7 @@ public class WagerServiceModule {
     }
 
     @Provides
+    @Singleton
     public WagerRoundManager wagerRoundManager(WagerRoundStateStore wagerRoundStateStore,
                                                MoneyService moneyService,
                                                WagerRoundArchiver archiver) {
@@ -45,11 +47,13 @@ public class WagerServiceModule {
     }
 
     @Provides
+    @Singleton
     public WagerRoundStateStore wagerRoundStateStore(Client client) {
         return new VoltWagerRoundStateStore(client);
     }
 
     @Provides
+    @Singleton
     public Client connectedVoltClient() {
         LOGGER.info("Creating volt client");
         Client client = ClientFactory.createClient();
@@ -64,11 +68,13 @@ public class WagerServiceModule {
     }
 
     @Provides
+    @Singleton
     public MoneyService moneyService() {
         return new FakeMoneyService(100);
     }
 
     @Provides
+    @Singleton
     public WagerRoundArchiver transactionArchiver() {
         return new FakeWagerRoundArchiver();
     }
