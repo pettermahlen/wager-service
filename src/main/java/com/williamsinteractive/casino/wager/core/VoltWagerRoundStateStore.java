@@ -155,9 +155,9 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
         @Override
         public void clientCallback(ClientResponse clientResponse) throws Exception {
             if (isError(clientResponse)) {
-                throw new RuntimeException("Procedure call failed: " + clientResponse.getStatusString());
+                resultFuture.setException(new RuntimeException("Procedure call failed: " + clientResponse.getStatusString()));
             } else if (isFailure(clientResponse)) {
-                throw new RuntimeException("Validation failure: " + clientResponse.getAppStatusString());
+                resultFuture.setException(new RuntimeException("Validation failure: " + clientResponse.getAppStatusString()));
             } else {
                 resultFuture.set(true);
             }
