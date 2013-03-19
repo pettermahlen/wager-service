@@ -1,7 +1,6 @@
 package com.williamsinteractive.casino.wager;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.yammer.dropwizard.config.Configuration;
 import org.hibernate.validator.constraints.NotEmpty;
 
 import javax.validation.constraints.Max;
@@ -12,11 +11,21 @@ import javax.validation.constraints.NotNull;
  *
  * @author Petter Måhlén
  */
-public class WagerServiceConfiguration extends Configuration {
+public class VoltConfiguration {
+    @NotNull
+    @Max(65535)
     @JsonProperty
-    private VoltConfiguration volt;
+    private int port = 21212;
 
-    public VoltConfiguration getVoltConfiguration() {
-        return volt;
+    @NotEmpty
+    @JsonProperty
+    private String host;
+
+    public int getPort() {
+        return port;
+    }
+
+    public String getHost() {
+        return host;
     }
 }

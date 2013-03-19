@@ -1,5 +1,6 @@
 package com.williamsinteractive.casino.wager.wiring;
 
+import com.williamsinteractive.casino.wager.VoltConfiguration;
 import com.williamsinteractive.casino.wager.WagerServiceConfiguration;
 import com.williamsinteractive.casino.wager.core.FakeMoneyService;
 import com.williamsinteractive.casino.wager.core.FakeWagerRoundArchiver;
@@ -58,8 +59,9 @@ public class WagerServiceModule {
         LOGGER.info("Creating volt client");
         Client client = ClientFactory.createClient();
         try {
-            LOGGER.info("connecting to {}:{}", configuration.getVoltHost(), configuration.getVoltPort());
-            client.createConnection(configuration.getVoltHost(), configuration.getVoltPort());
+            VoltConfiguration voltConfiguration = configuration.getVoltConfiguration();
+            LOGGER.info("connecting to {}:{}", voltConfiguration.getHost(), voltConfiguration.getPort());
+            client.createConnection(voltConfiguration.getHost(), voltConfiguration.getPort());
         }
         catch (IOException e) {
             throw new RuntimeException(e);

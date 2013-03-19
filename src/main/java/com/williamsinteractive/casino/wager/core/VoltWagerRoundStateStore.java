@@ -239,6 +239,6 @@ public class VoltWagerRoundStateStore implements WagerRoundStateStore {
     }
 
     private static boolean isFailure(ClientResponse clientResponse) {
-        return clientResponse.getAppStatus() != (byte) 0; // TODO: should get that constant from somewhere..
+        return clientResponse.getAppStatus() != (byte) 0; // TODO: should get that constant from somewhere.. Ideally, the live-wagers-repository catalogue jar
     }
 }

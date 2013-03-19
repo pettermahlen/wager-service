@@ -1,5 +1,6 @@
-voltHost: localhost
-voltPort: 21212
+volt:
+  host: localhost
+  port: 21212
 
 logging:
   level: DEBUG
