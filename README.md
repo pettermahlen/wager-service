@@ -6,13 +6,12 @@ The wager-service depends on:
 * Lots of jars that are centrally available
 * Some jars that are not available in the central Maven repository
 
-To build, you need to get Java and Maven installed. (See Google for how to do that). Once that's done, you need to install the 
-following jars locally:
-1. org.voltdb:voltdb-java-client:jar:3.0
-1.1 Download VoltDB from http://voltdb.com/community/downloads.php
-1.2 Unzip the archive, and place it somewhere (this will be referred to VOLTDB_HOME)
-1.3 Clone the https://github.com/pettermahlen/voltdb-pom git repo and 'cd' into that directory
-1.4 run 'mvn install:install-file -Dfile=$VOLTDB_HOME/voltdb/voltdbclient-3.0.jar -DpomFile=voltdb-java-client-3.0.pom
+To build, you need to get Java and Maven installed. (See Google for how to do that). Once that's done, you need to install the  org.voltdb:voltdb-java-client:jar:3.0 locally:
+
+1. Download VoltDB from http://voltdb.com/community/downloads.php
+2. Unzip the archive, and place it somewhere (this will be referred to VOLTDB_HOME)
+3. Clone the https://github.com/pettermahlen/voltdb-pom git repo and 'cd' into that directory
+4. run 'mvn install:install-file -Dfile=$VOLTDB_HOME/voltdb/voltdbclient-3.0.jar -DpomFile=voltdb-java-client-3.0.pom
 
 Once this is all done, you should be able to build using `mvn package`.
 
