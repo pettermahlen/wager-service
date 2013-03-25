@@ -32,4 +32,12 @@ See http://dropwizard.codahale.com/getting-started/ for more information about r
 
 Simply launch the 'WagerService' class as a regular Java Main class, and provide the command line arguments `server src/main/config/dev.yml`.
 
+# NOTES/TODO
 
+The cucumber tests are just sketches to illustrate roughly how you can write them. Key points are:
+
+1. Keep the feature files very simple and free of details. Details and precision is hard, which is why we invent programming languages. Natural
+language, such as that used in Gherkin feature files, is not good at being precise, so leave details to the code and specify only overall and important
+points in feature files.
+2. Keep step definition code grouped by 'domain concept' rather than 'feature file'. In the example code, there is a StepDefs each for Wager Service frontend, 
+for the Volt repository, etc.
